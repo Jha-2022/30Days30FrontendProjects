@@ -1,33 +1,47 @@
-const API_KEY = '13KkfiJ9tqP7Wsm1mgR9lz7PoxVNUHT7';
+const API_KEY = 'YOUR_API_KEY_HERE';
+
+// Top 5 US companies (you can change these)
+const tickers = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA'];
 
 async function fetchStockData() {
-    const ticker = document.getElementById('tickerInput').value.toUpperCase();
     const displayBoard = document.getElementById('displayBoard');
-    
-    if (!ticker) return alert("Please enter a ticker");
+    displayBoard.innerHTML = ""; // clear previous data
+    displayBoard.style.display = 'flex';
+    displayBoard.style.gap = '20px';
 
-    // Using the Prev Day endpoint for a reliable simple test
-    const url = `https://api.polygon.io/v2/aggs/ticker/${ticker}/prev?adjusted=true&apiKey=${API_KEY}`;
+    for (let ticker of tickers) {
+        const url = `https://api.polygon.io/v2/aggs/ticker/${ticker}/prev?adjusted=true&apiKey=${API_KEY}`;
 
-    try {
-        const response = await fetch(url);
-        const data = await response.json();
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
 
-        if (data.resultsCount > 0) {
-            const result = data.results[0];
-            
-            displayBoard.style.display = 'block';
-            document.getElementById('symbol').innerText = data.ticker;
-            document.getElementById('price').innerText = `$${result.c}`; // 'c' is close price
-            
-            const change = result.c - result.o; // close minus open
-            document.getElementById('change').innerText = `Daily Change: ${change.toFixed(2)}`;
-            document.getElementById('change').style.color = change >= 0 ? '#00ff88' : '#ff4444';
-        } else {
-            alert("Ticker not found.");
+            if (data.resultsCount > 0) {
+                const result = data.results[0];
+
+                const change = result.c - result.o;
+
+                // Create card for each stock
+                const stockCard = document.createElement('div');
+                stockCard.style.border = "1px solid #ccc";
+                stockCard.style.padding = "15px";
+                stockCard.style.borderRadius = "10px";
+                stockCard.style.width = "150px";
+                stockCard.style.textAlign = "center";
+
+                stockCard.innerHTML = `
+                    <h3>${data.ticker}</h3>
+                    <p>Price: $${result.c}</p>
+                    <p style="color:${change >= 0 ? '#00ff88' : '#ff4444'}">
+                        Change: ${change.toFixed(2)}
+                    </p>
+                `;
+
+                displayBoard.appendChild(stockCard);
+            }
+
+        } catch (error) {
+            console.error(`Error fetching ${ticker}:`, error);
         }
-    } catch (error) {
-        console.error("Error fetching data:", error);
-        alert("Failed to fetch data. Check console.");
     }
 }
